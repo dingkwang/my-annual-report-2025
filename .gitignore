@@ -1,0 +1,50 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Data directories (conversation exports, etc.)
+data/
+output/
+
+# Logs
+logs/
+*.log
+
+# Configuration files with sensitive info (tokens, API keys)
+config.yaml
+.env
+*.env
+corp_cert.py
+
+# Certificates
+certs/
+*.pem
+*.key
+*.crt
+
+# Progress tracking
+progress.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+.claude/
+.pytest_cache/

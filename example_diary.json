@@ -1,0 +1,5 @@
+{
+  "example_diary": "今天我终于想起来和 chatgpt 讨论了一下一直都没想明白的马克思主义的问题。我一直没想明白...。但是最后 Chatgpt 给我的回答有些道理... 但是也没有完全说服我。 此外我还从 Chatgpt 的聊天模式学到一点，他在语音模型总是先说'我明白你的想法'， '我理解你的角度'。我觉得这也是人和人交流是有时候被忽略的，我们总是迫不及待的想表达自己的想法，但是对方更想知道的是，自己有没有说清楚，有没有理解。此外我还思考一下强化学习在具身智能模型中的应用，尤其是 reward model ， verifierable award 在机器人模型中如何构建。我学习到如果有有仿真真值/传感器阈值可判定成功 → 用 verifier，不需要 RM...。 我想提醒自己在多看一些相关的论文和代码。",
+  "resume_plain_text": "2021/10 ~ 2024/12 Aeva, Vision perception engineer, and perpare for job interview starting from 2023/12; 2024/12-2025/03 Between job; 2025/03 - now Aeva AI agent Sr Software engineer", 
+  "requirements": "对于工程技术相关问题，只简要提交。其他所有非技术类内容，请详细写。"
+}
