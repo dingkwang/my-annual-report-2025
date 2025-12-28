@@ -345,14 +345,26 @@ Parse into the required 5 time periods."""
 
     def _setup_logging(self) -> None:
         """Setup logging configuration"""
-        log_config: Dict[str, Any] = self.config["logging"]
-        log_file = Path(str(log_config["file"]))
-        log_file.parent.mkdir(parents=True, exist_ok=True)
+        # Get logging config with defaults
+        log_config: Dict[str, Any] = self.config.get("logging", {})
+        log_level = log_config.get("level", "INFO")
+        log_file_path = log_config.get("file")
+        
+        handlers = []
+        
+        # Add file handler if log file is specified
+        if log_file_path:
+            log_file = Path(str(log_file_path))
+            log_file.parent.mkdir(parents=True, exist_ok=True)
+            handlers.append(logging.FileHandler(log_file))
+        
+        # Always add console handler
+        handlers.append(logging.StreamHandler())
 
         logging.basicConfig(
-            level=getattr(logging, str(log_config["level"])),
+            level=getattr(logging, str(log_level)),
             format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
+            handlers=handlers,
         )
         self.logger = logging.getLogger(__name__)
 

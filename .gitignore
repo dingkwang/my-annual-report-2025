@@ -49,3 +49,4 @@ progress.json
 .claude/
 .pytest_cache/
 *.zip
+*.json

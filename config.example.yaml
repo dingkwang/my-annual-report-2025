@@ -1,7 +1,7 @@
 # Configuration for Diary Generator
 llm:
-  model: ""
-  base_url: ""
+  model: "nvidia/nemotron-3-nano-30b-a3b:free"
+  base_url: "https://openrouter.ai/api/v1"
   api_key: ""
   temperature: 0.3  # Lower temperature for consistency
   max_tokens: 5000

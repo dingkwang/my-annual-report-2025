@@ -4,27 +4,31 @@ Main script to generate diaries from OpenAI conversation exports
 """
 
 import argparse
+import json
 import os
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 from diary_generator import DiaryGenerator
-
-try:
-    from corp_cert import ensure_corp_cert_bundle
-except ImportError:
-    # If corp_cert.py doesn't exist (e.g., in public repo), define a no-op version
-    def ensure_corp_cert_bundle() -> str:
-        return ""
+from parse_conversations import parse_conversations
 
 
 def main():
     parser = argparse.ArgumentParser(description="Generate diaries from OpenAI conversation exports")
     parser.add_argument(
+        "zip_or_json",
+        nargs="?",
+        type=str,
+        default=None,
+        help="Path to ZIP file containing conversations.json or path to conversations_by_date.json"
+    )
+    parser.add_argument(
         "--input",
         type=str,
-        default="data/conversations_by_date.json",
-        help="Path to conversations_by_date.json file"
+        default=None,
+        help="(Deprecated) Use positional argument instead. Path to conversations_by_date.json file"
     )
     parser.add_argument(
         "--config",
@@ -50,6 +54,62 @@ def main():
 
     args = parser.parse_args()
 
+    # Determine input file
+    input_file = None
+    conversations_by_date_json = None
+    temp_dir = None
+    
+    # Priority: positional argument > --input flag > default
+    source_file = args.zip_or_json or args.input or "data/conversations_by_date.json"
+    
+    # Check if it's a zip file
+    if source_file.endswith('.zip'):
+        if not Path(source_file).exists():
+            print(f"❌ Error: ZIP file '{source_file}' not found!")
+            sys.exit(1)
+        
+        print(f"📦 Extracting conversations from ZIP file: {source_file}")
+        
+        # Create temporary directory
+        temp_dir = tempfile.mkdtemp()
+        
+        # Extract conversations.json from zip
+        with zipfile.ZipFile(source_file, 'r') as zip_ref:
+            # Find conversations.json in the zip
+            conversations_json = None
+            for name in zip_ref.namelist():
+                if name.endswith('conversations.json'):
+                    conversations_json = name
+                    break
+            
+            if not conversations_json:
+                print("❌ Error: conversations.json not found in ZIP file!")
+                sys.exit(1)
+            
+            # Extract it
+            zip_ref.extract(conversations_json, temp_dir)
+            conversations_json_path = Path(temp_dir) / conversations_json
+        
+        print(f"✅ Extracted conversations.json")
+        print(f"📊 Parsing conversations and grouping by date...")
+        
+        # Parse conversations.json to create conversations_by_date
+        conversations_by_date = parse_conversations(conversations_json_path)
+        
+        # Save to temporary file
+        conversations_by_date_json = Path(temp_dir) / "conversations_by_date.json"
+        with open(conversations_by_date_json, 'w', encoding='utf-8') as f:
+            json.dump(conversations_by_date, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ Created conversations_by_date.json with {len(conversations_by_date)} dates")
+        input_file = str(conversations_by_date_json)
+    else:
+        # It's a JSON file (or default path)
+        input_file = source_file
+        if not Path(input_file).exists():
+            print(f"❌ Error: Input file '{input_file}' not found!")
+            sys.exit(1)
+
     # Load config early to check SSL cert configuration
     import yaml
     try:
@@ -57,36 +117,26 @@ def main():
             config = yaml.safe_load(f)
     except FileNotFoundError:
         print(f"❌ Error: Config file '{args.config}' not found!")
+        # Clean up temp directory if it was created
+        if temp_dir and Path(temp_dir).exists():
+            import shutil
+            shutil.rmtree(temp_dir)
         sys.exit(1)
     except Exception as e:
         print(f"❌ Error loading config: {e}")
-        sys.exit(1)
-
-    # Setup SSL certificate only if configured
-    ssl_cert_path = config.get('llm', {}).get('ssl_cert')
-    if ssl_cert_path:
-        # SSL cert is configured, try to ensure it exists
-        try:
-            actual_cert_path = ensure_corp_cert_bundle()
-            if actual_cert_path:
-                print(f"🔐 Using SSL certificate: {actual_cert_path}")
-            else:
-                print(f"⚠️  SSL cert configured but corp_cert.py not available")
-        except Exception as e:
-            print(f"⚠️  Failed to setup SSL certificate: {e}")
-            print("   Continuing without SSL certificate...")
-    else:
-        print("ℹ️  No SSL certificate configured, using default SSL settings")
-
-    # Check if input file exists
-    if not Path(args.input).exists():
-        print(f"❌ Error: Input file '{args.input}' not found!")
+        # Clean up temp directory if it was created
+        if temp_dir and Path(temp_dir).exists():
+            import shutil
+            shutil.rmtree(temp_dir)
         sys.exit(1)
 
     # Check API configuration (config already loaded above for SSL cert check)
     if config['llm']['base_url'] == "YOUR_BASE_URL_HERE":
         print("❌ Error: Please update the LLM configuration in config.yaml")
-        print("   Set your base_url and api_key for grok-4-1-fast-non-reasoning")
+        # Clean up temp directory if it was created
+        if temp_dir and Path(temp_dir).exists():
+            import shutil
+            shutil.rmtree(temp_dir)
         sys.exit(1)
 
     # Initialize generator
@@ -96,8 +146,7 @@ def main():
     # Test mode - limit to first 3 days
     if args.test:
         print("\n🧪 Running in test mode (first 3 days only)...")
-        import json
-        with open(args.input, 'r', encoding='utf-8') as f:
+        with open(input_file, 'r', encoding='utf-8') as f:
             all_data = json.load(f)
 
         # Get first 3 dates
@@ -114,14 +163,16 @@ def main():
 
         # Clean up
         os.remove(test_file)
+        if temp_dir and Path(temp_dir).exists():
+            import shutil
+            shutil.rmtree(temp_dir)
 
         print("\n✅ Test completed! Check the output/diaries folder for results.")
         print("   If satisfied, run without --test flag to process all data.")
     elif args.quick:
         # Quick mode - first 10 diaries per year
         print("\n⚡ Running in quick mode (first 10 diaries per year)...")
-        import json
-        with open(args.input, 'r', encoding='utf-8') as f:
+        with open(input_file, 'r', encoding='utf-8') as f:
             all_data = json.load(f)
 
         # Group by year and take first 10 from each
@@ -150,6 +201,9 @@ def main():
 
         # Clean up
         os.remove(quick_file)
+        if temp_dir and Path(temp_dir).exists():
+            import shutil
+            shutil.rmtree(temp_dir)
 
         print(f"\n✅ Quick mode completed! Processed {len(quick_dates)} diaries.")
         print("   Check the output/diaries folder for results.")
@@ -157,7 +211,12 @@ def main():
         # Generate all diaries
         if args.overwrite:
             print("\n🔄 Overwrite mode enabled - regenerating all diaries")
-        generator.generate_all_diaries(args.input, overwrite=args.overwrite)
+        generator.generate_all_diaries(input_file, overwrite=args.overwrite)
+        
+        # Clean up temp directory
+        if temp_dir and Path(temp_dir).exists():
+            import shutil
+            shutil.rmtree(temp_dir)
 
 
 if __name__ == "__main__":
