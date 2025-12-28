@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日记生成器 - Diary Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 600;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 15px 20px;
+            background: #f5f5f5;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: #efefef;
+            border-color: #667eea;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .collapsible {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .collapsible:hover {
+            background: #f0f0f0;
+        }
+        
+        .collapsible-content {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .collapsible.active .collapsible-content {
+            display: block;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .diary-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .diary-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: all 0.3s;
+        }
+        
+        .diary-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .diary-item a {
+            text-decoration: none;
+            color: #333;
+            display: block;
+        }
+        
+        .diary-date {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .diary-title {
+            color: #666;
+        }
+        
+        .summary-item {
+            border-left-color: #ffa500;
+            background: #fff9e6;
+        }
+        
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            padding: 15px;
+            border-radius: 8px;
+            color: #c33;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .mode-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mode-option:hover {
+            border-color: #667eea;
+        }
+        
+        .mode-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .download-btn {
+            margin-top: 20px;
+            background: #28a745;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📔 日记生成器</h1>
+        <p class="subtitle">从 ChatGPT 对话记录生成个人日记</p>
+        
+        <form id="diaryForm" enctype="multipart/form-data">
+            <!-- LLM Configuration -->
+            <div class="form-group">
+                <label>🤖 模型名称 (Model)</label>
+                <input type="text" id="model" name="model" value="nvidia/nemotron-3-nano-30b-a3bfree" required>
+                <div class="help-text">例如: nvidia/nemotron-3-nano-30b-a3bfree, openai/gpt-4o-mini</div>
+            </div>
+            
+            <div class="form-group">
+                <label>🌐 API Base URL</label>
+                <input type="text" id="base_url" name="base_url" value="https://openrouter.ai/api/v1" required>
+                <div class="help-text">例如: https://openrouter.ai/api/v1</div>
+            </div>
+            
+            <div class="form-group">
+                <label>🔑 API Key</label>
+                <input type="password" id="api_key" name="api_key" required placeholder="输入你的 API Key">
+            </div>
+            
+            <div class="form-group">
+                <label>🎯 Temperature</label>
+                <input type="number" id="temperature" name="temperature" value="0.3" step="0.1" min="0" max="2">
+                <div class="help-text">控制生成的随机性，0.0-2.0，推荐 0.3</div>
+            </div>
+            
+            <!-- Optional Resume -->
+            <div class="collapsible">
+                <strong>📝 个人简历（可选）</strong>
+                <div class="help-text">提供简历可以让日记更贴合你的背景</div>
+                <div class="collapsible-content">
+                    <div class="form-group">
+                        <label>2021 及之前</label>
+                        <textarea id="resume_2021_and_before" name="resume_2021_and_before" placeholder="例如：2020年毕业于XX大学计算机专业"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>2022 年</label>
+                        <textarea id="resume_2022" name="resume_2022" placeholder="例如：2022年加入XX公司担任软件工程师"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>2023 年</label>
+                        <textarea id="resume_2023" name="resume_2023"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>2024 年</label>
+                        <textarea id="resume_2024" name="resume_2024"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>2025 年</label>
+                        <textarea id="resume_2025" name="resume_2025"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- File Upload -->
+            <div class="form-group">
+                <label>📦 上传对话数据 ZIP 文件</label>
+                <div class="file-input-wrapper">
+                    <label for="zip_file" class="file-input-label">
+                        <span id="file-label">点击选择文件或拖拽到这里</span>
+                    </label>
+                    <input type="file" id="zip_file" name="zip_file" accept=".zip" required>
+                </div>
+                <div id="file-name" class="file-name"></div>
+                <div class="help-text">从 ChatGPT 导出的对话数据 ZIP 文件</div>
+            </div>
+            
+            <!-- Mode Selection -->
+            <div class="form-group">
+                <label>⚡ 生成模式</label>
+                <div class="mode-selector">
+                    <div class="mode-option selected" data-mode="quick">
+                        <strong>快速模式</strong>
+                        <div class="help-text">每年前 10 篇</div>
+                    </div>
+                    <div class="mode-option" data-mode="full">
+                        <strong>完整模式</strong>
+                        <div class="help-text">生成所有日记</div>
+                    </div>
+                </div>
+                <input type="hidden" id="mode" name="mode" value="quick">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                🚀 开始生成日记
+            </button>
+        </form>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>正在生成日记，请稍候...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="results" id="results">
+            <h2>✅ 生成完成！</h2>
+            <p>共生成 <strong id="totalCount">0</strong> 篇日记</p>
+            <button class="btn download-btn" id="downloadBtn">📥 下载所有日记</button>
+            <ul class="diary-list" id="diaryList"></ul>
+        </div>
+    </div>
+    
+    <script>
+        let sessionId = Date.now().toString();
+        
+        // Collapsible sections
+        document.querySelectorAll('.collapsible').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
+                    this.classList.toggle('active');
+                }
+            });
+        });
+        
+        // File input handling
+        const fileInput = document.getElementById('zip_file');
+        const fileLabel = document.getElementById('file-label');
+        const fileName = document.getElementById('file-name');
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                fileName.textContent = `📎 ${file.name} (${fileSizeMB} MB)`;
+                fileLabel.textContent = '✓ 文件已选择';
+                
+                // Warn if file is too large
+                if (file.size > 500 * 1024 * 1024) {
+                    fileName.textContent += ' ⚠️ 文件过大（超过 500MB）';
+                    fileName.style.color = '#c33';
+                } else {
+                    fileName.style.color = '#667eea';
+                }
+            }
+        });
+        
+        // Mode selection
+        document.querySelectorAll('.mode-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('mode').value = this.dataset.mode;
+            });
+        });
+        
+        // Form submission
+        document.getElementById('diaryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('session_id', sessionId);
+            
+            // Hide previous results/errors
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Try to parse as JSON, handle HTML error responses
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // Got HTML error page instead of JSON
+                    const text = await response.text();
+                    result = { 
+                        error: response.status === 413 
+                            ? '文件太大！请确保 ZIP 文件小于 500MB' 
+                            : `服务器错误 (${response.status})`
+                    };
+                }
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                if (response.ok && result.success) {
+                    // Show results
+                    document.getElementById('results').style.display = 'block';
+                    document.getElementById('totalCount').textContent = result.total;
+                    
+                    const diaryList = document.getElementById('diaryList');
+                    diaryList.innerHTML = '';
+                    
+                    result.diaries.forEach(diary => {
+                        const li = document.createElement('li');
+                        li.className = 'diary-item' + (diary.is_summary ? ' summary-item' : '');
+                        li.innerHTML = `
+                            <a href="/diary/${diary.path}" target="_blank">
+                                <div class="diary-date">${diary.date}</div>
+                                <div class="diary-title">${diary.title}</div>
+                            </a>
+                        `;
+                        diaryList.appendChild(li);
+                    });
+                    
+                    // Smooth scroll to results
+                    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    // Show error
+                    const errorDiv = document.getElementById('error');
+                    errorDiv.textContent = '❌ ' + (result.error || '生成失败');
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                
+                const errorDiv = document.getElementById('error');
+                errorDiv.textContent = '❌ 网络错误: ' + error.message;
+                errorDiv.style.display = 'block';
+            }
+        });
+        
+        // Download button
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            window.location.href = '/download/' + sessionId;
+        });
+    </script>
+</body>
+</html>
+
