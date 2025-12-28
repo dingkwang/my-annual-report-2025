@@ -427,7 +427,7 @@ Parse into the required 5 time periods."""
             f"\n✅ Diary generation complete! Generated {len(self.generated_diaries)} diaries."
         )
 
-        # Generate annual summaries
+        # Generate annual summaries based on actually generated diaries
         self.generate_annual_summaries(sorted_dates)
 
     def generate_single_day(self, date: str, conversations: List[Dict[str, Any]]) -> DayDiary:
@@ -653,7 +653,7 @@ Customer requirements:
                 print(f"❌ Error generating summary for {year}: {str(e)}")
 
     def generate_year_summary(self, year: str, dates: List[str]) -> YearSummary:
-        """Generate summary for a specific year"""
+        """Generate summary for a specific year based on actually generated diaries"""
         # Read all diaries for this year
         year_dir = self.output_dir / year
         if not year_dir.exists():
@@ -663,21 +663,28 @@ Customer requirements:
                 content=f"{year}年没有日记记录。"
             )
 
-        # Collect all diary contents
+        # Collect all diary contents - scan directory for actual diary files
+        # This ensures we only use diaries that were actually generated
         all_diaries = []
-        for date in sorted(dates):
-            diary_files = list(year_dir.glob(f"{date}-*.md"))
-            if diary_files:
-                diary_file = diary_files[0]
-                with open(diary_file, "r", encoding="utf-8") as f:
-                    content = f.read()
-                    all_diaries.append(f"【{date}】\n{content}\n")
-
-        if not all_diaries:
+        diary_files = sorted(year_dir.glob("????-??-??-*.md"))  # Match YYYY-MM-DD-*.md pattern
+        
+        if not diary_files:
+            self.logger.warning(f"No diary files found in {year_dir}")
             return YearSummary(
                 title=f"{year}年度总结",
                 content=f"{year}年没有找到日记文件。"
             )
+        
+        for diary_file in diary_files:
+            # Skip the annual summary file itself
+            if "年度总结" in diary_file.name:
+                continue
+            
+            with open(diary_file, "r", encoding="utf-8") as f:
+                content = f.read()
+                # Extract date from filename (YYYY-MM-DD)
+                date_match = diary_file.name[:10]
+                all_diaries.append(f"【{date_match}】\n{content}\n")
 
         # Build prompt for annual summary
         all_content = "\n---\n\n".join(all_diaries)
