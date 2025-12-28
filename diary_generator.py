@@ -488,7 +488,7 @@ Parse into the required 5 time periods."""
         resume = self._get_date_aware_resume(date)
         customer_requirements = self.example_config.get("requirements", "")
 
-        system_prompt = f"""你是王鼎康，一下都是你和 AI 的对话，以第一人称写一篇客观的日记。
+        system_prompt = f"""你是以下对话的用户，以下都是你和 AI 的对话，以第一人称写一篇客观的日记。
 
 个人简历（请不要在日记中引用）：
 {resume}
@@ -696,7 +696,7 @@ Customer requirements:
 
 """
         
-        system_prompt = f"""你是王鼎康，现在需要写一篇{year}年的年度总结。
+        system_prompt = f"""你是以下对话的用户，现在需要写一篇{year}年的年度总结。
 
 个人简历：
 {resume}
