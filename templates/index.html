@@ -286,8 +286,8 @@
             <!-- LLM Configuration -->
             <div class="form-group">
                 <label>🤖 模型名称 (Model)</label>
-                <input type="text" id="model" name="model" value="nvidia/nemotron-3-nano-30b-a3bfree" required>
-                <div class="help-text">例如: nvidia/nemotron-3-nano-30b-a3bfree, openai/gpt-4o-mini</div>
+                <input type="text" id="model" name="model" value="nvidia/nemotron-3-nano-30b-a3b:free" required>
+                <div class="help-text">例如: nvidia/nemotron-3-nano-30b-a3b:free, openai/gpt-4o-mini</div>
             </div>
             
             <div class="form-group">
@@ -409,8 +409,8 @@
                 fileLabel.textContent = '✓ 文件已选择';
                 
                 // Warn if file is too large
-                if (file.size > 500 * 1024 * 1024) {
-                    fileName.textContent += ' ⚠️ 文件过大（超过 500MB）';
+                if (file.size > 3 * 1024 * 1024 * 1024) {
+                    fileName.textContent += ' ⚠️ 文件过大（超过 3GB）';
                     fileName.style.color = '#c33';
                 } else {
                     fileName.style.color = '#667eea';
@@ -458,7 +458,7 @@
                     const text = await response.text();
                     result = { 
                         error: response.status === 413 
-                            ? '文件太大！请确保 ZIP 文件小于 500MB' 
+                            ? '文件太大！请确保 ZIP 文件小于 3GB' 
                             : `服务器错误 (${response.status})`
                     };
                 }

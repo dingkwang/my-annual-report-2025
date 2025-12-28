@@ -50,6 +50,8 @@ uv sync
 
 ## 🚀 使用方式
 
+> 💡 **快速开始**: 如果你想要最快速度上手，请查看 [5 分钟快速指南](QUICK_START.md)
+
 ### 方式一：Web 界面（推荐，适合新手）
 
 #### 启动服务
@@ -331,10 +333,11 @@ uv run generate_diary.py your_export.zip
 
 ## 📚 文档索引
 
-- [Web 界面详细文档](README_web.md)
-- [命令行详细文档](README_diary_generator.md)
-- [快速使用指南](QUICK_RUN_USAGE.md)
-- [故障排除](TROUBLESHOOTING.md)
+- **[5分钟快速开始](QUICK_START.md)** - 最快上手指南 ⚡
+- [Web 界面详细文档](README_web.md) - 浏览器使用说明
+- [命令行详细文档](README_diary_generator.md) - 批量处理指南
+- [快速使用指南](QUICK_RUN_USAGE.md) - 原有的快速指南
+- [故障排除](TROUBLESHOOTING.md) - 常见问题解决
 
 ---
 

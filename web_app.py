@@ -15,13 +15,13 @@ from diary_generator import DiaryGenerator
 from parse_conversations import parse_conversations
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max upload
+app.config['MAX_CONTENT_LENGTH'] = 3 * 1024 * 1024 * 1024  # 3GB max upload
 app.config['UPLOAD_FOLDER'] = tempfile.mkdtemp()
 
 # Handle file too large error
 @app.errorhandler(413)
 def request_entity_too_large(error):
-    return jsonify({'error': '文件太大！请确保 ZIP 文件小于 500MB'}), 413
+    return jsonify({'error': '文件太大！请确保 ZIP 文件小于 3GB'}), 413
 
 # Store generation status
 generation_status = {}
