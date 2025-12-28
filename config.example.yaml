@@ -1,0 +1,23 @@
+# Configuration for Diary Generator
+llm:
+  model: ""
+  base_url: ""
+  api_key: ""
+  temperature: 0.3  # Lower temperature for consistency
+  max_tokens: 5000
+  
+diary_settings:
+  min_conversation_length: 1  # Filter out very short conversations
+  output_format: "markdown"
+
+output:
+  base_dir: "./output/diaries"
+
+_dairy_example: 今天我在做...的时候想到...。我挺认同...，但是也有些疑问...
+
+_annual_resume:
+    2021_and_before: 在 A 公司实习
+    2022: A 公司转正，成为 MLE
+    2023: 继续在 A 公司工作；12月开始准备求职面试，9月和老婆领证
+    2024: 1-12月在 A 公司工作并持续准备面试；12月离职 A 公司，开始全职找工作。
+    2025: 1-3月全职找工作；3月入职 B 公司，担任 AI agent Sr Software engineer；3月至今在 B 公司工作
